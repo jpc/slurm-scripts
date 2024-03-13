@@ -1,0 +1,45 @@
+#!/bin/bash
+PROGRAM_PATH=$(dirname "$($(command -v greadlink || command -v readlink) -f -- "$0")")
+
+: ${TIME_LIMIT:=00:40:00} ${JOBS_PER_GPU:=1} ${JOB_NODES:=1}
+NODES=$1; shift
+
+if [ "$NODES" == "devel" ]; then
+	if [ -n "$JOBS_PER_GPU" ]; then
+  		sample=$(head -1)
+		{ for nproc in $(seq 1 4); do
+			for x in $(seq 1 4); do	[ $x -ge $nproc ] && echo "$sample" || echo; done
+	       	done } > file-list.$$
+		JOBS_PER_GPU=4
+	else
+		cat > file-list.$$
+	fi
+
+	: ${CLUSTER:=develbooster}
+	NODES=1
+else
+	cat > file-list.$$
+	: ${CLUSTER:=booster}
+fi
+
+JOBS_PER_NODE=$(($JOBS_PER_GPU * 4 * $JOB_NODES))
+N_JOBS=$(wc -l < file-list.$$)
+
+N_RUNS=$(( ($N_JOBS + $JOBS_PER_NODE - 1) / $JOBS_PER_NODE))
+
+JOBID=$(sbatch --parsable /dev/stdin "$@" <<EOF
+#!/bin/bash
+#SBATCH --account=cstdl
+#SBATCH --nodes=$JOB_NODES
+#SBATCH --ntasks=$JOBS_PER_NODE
+#SBATCH --ntasks-per-gpu=$JOBS_PER_GPU
+#SBATCH --array=0-$(($N_RUNS-1))%$NODES
+#SBATCH --output=out.%j
+#SBATCH --error=err.%j
+#SBATCH --time=$TIME_LIMIT
+#SBATCH --partition=$CLUSTER
+
+srun -A cstdl --cpu-bind=none,v --accel-bind=gn --job-name=interactive \
+	$PROGRAM_PATH/one-batch-job.sh file-list.$$ "\$@"
+EOF
+) && tail -F err.$JOBID out.$JOBID

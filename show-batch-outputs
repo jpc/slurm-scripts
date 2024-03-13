@@ -1,0 +1,14 @@
+#!/bin/sh
+
+progress_or_err() {
+  if [ -f $1.retval ] && grep -v 0 $1.retval > /dev/null; then
+    grep . $1.stderr | tail -1
+  else
+    cat $1.stdout | tr '\r' '\n' | grep . | tail -1
+  fi
+}
+
+for x in outputs/*.stdout; do
+  b=${x%%.stdout}
+  echo $b $(progress_or_err $b)
+done

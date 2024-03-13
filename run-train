@@ -1,0 +1,24 @@
+#!/bin/bash
+PROGRAM_PATH=$(dirname "$($(command -v greadlink || command -v readlink) -f -- "$0")")
+
+: ${CLUSTER:=booster} ${TIME_LIMIT:=02:00:00}
+
+NODES=$1; shift
+
+JOBID=$(sbatch --parsable /dev/stdin "$@" <<EOF
+#!/bin/bash
+#SBATCH --account=cstdl
+#SBATCH --nodes=$NODES
+#SBATCH --ntasks-per-node=4
+#SBATCH --output=out.%j
+#SBATCH --error=err.%j
+#SBATCH --time=$TIME_LIMIT
+#SBATCH --partition=$CLUSTER
+
+master_addr=\$(scontrol show hostnames "\$SLURM_JOB_NODELIST" | head -n 1)
+export MASTER_ADDR=\$master_addr"i"
+echo "MASTER_ADDR="\$MASTER_ADDR
+
+srun -A cstdl --cpu-bind=none --gpu-bind=none "\$@"
+EOF
+) && tail -F err.$JOBID out.$JOBID

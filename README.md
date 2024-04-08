@@ -88,3 +88,20 @@ seq 128 | \
     --load-from t2s_up_wds_mlang_enclm/oscar_yellowgreen.model \
     --wandb-task-name t2s_up_wds_mlang_enclm_ft_clean
 ```
+
+## Jobs overview
+
+These are 3 background commands I like to run in tmux to have an overview of what's happening on the cluster,
+how my jobs are doing and to push the training progress to W&B (`booster` compute nodes do not have internet access).
+
+```bash
+watch "sinfo |grep '^booster\|develbooster'"
+```
+
+```bash
+watch "squeue -u $USER"
+```
+
+```bash
+while true; do wandb sync --sync-all wandb/; sleep 30; done
+```

@@ -207,6 +207,7 @@ Releases the resources acquired by `http_get` or `http_post`. Should be call whe
     #include <string.h>
     #include <sys/types.h>
     #include <sys/socket.h>
+    #include <arpa/inet.h>
     #include <unistd.h>
     #include <errno.h>
     #include <fcntl.h>
@@ -302,16 +303,18 @@ HTTP_SOCKET http_internal_connect( char const* address, char const* port )
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_protocol = IPPROTO_TCP;    // Use Transmission Control Protocol (TCP).
 
-    // resolve the server address and port
-    struct addrinfo* addri = 0;
-    int error = getaddrinfo( address, port, &hints, &addri) ;
-    if( error != 0 ) return HTTP_INVALID_SOCKET;
+    // // resolve the server address and port
+    // struct addrinfo* addri = 0;
+    // int error = getaddrinfo( address, port, &hints, &addri) ;
+    // if( error != 0 ) return HTTP_INVALID_SOCKET;
+
+
 
     // create the socket
-    HTTP_SOCKET sock = socket( addri->ai_family, addri->ai_socktype, addri->ai_protocol );
+    HTTP_SOCKET sock = socket( AF_INET, SOCK_STREAM, 0 );
     if( sock == -1) 
         {
-        freeaddrinfo( addri );
+        // freeaddrinfo( addri );
         return HTTP_INVALID_SOCKET;
         }
 
@@ -325,7 +328,7 @@ HTTP_SOCKET http_internal_connect( char const* address, char const* port )
     #endif
     if( res == -1 )
         {
-        freeaddrinfo( addri );
+        // freeaddrinfo( addri );
         #ifdef _WIN32
             closesocket( sock );
         #else
@@ -334,27 +337,33 @@ HTTP_SOCKET http_internal_connect( char const* address, char const* port )
         return HTTP_INVALID_SOCKET;
         }
 
+    struct sockaddr_in connect_addr;
+    memset(&connect_addr, 0, sizeof(connect_addr));
+    connect_addr.sin_family = AF_INET;
+    connect_addr.sin_addr.s_addr = inet_addr(address);
+    connect_addr.sin_port = htons(atoi(port));
+
     // connect to server
-    if( connect( sock, addri->ai_addr, (int)addri->ai_addrlen ) == -1 )
+    if( connect( sock, (struct sockaddr *)&connect_addr, sizeof(connect_addr) ) == -1 )
         {
         #ifdef _WIN32
             if( WSAGetLastError() != WSAEWOULDBLOCK && WSAGetLastError() != WSAEINPROGRESS )
                 {
-                freeaddrinfo( addri );
+                // freeaddrinfo( addri );
                 closesocket( sock );
                 return HTTP_INVALID_SOCKET;
                 }
         #else
             if( errno != EWOULDBLOCK && errno != EINPROGRESS && errno != EAGAIN )
                 {
-                freeaddrinfo( addri );
+                // freeaddrinfo( addri );
                 close( sock );
                 return HTTP_INVALID_SOCKET;
                 }
         #endif
         }
 
-    freeaddrinfo( addri );
+    // freeaddrinfo( addri );
     return sock;
     }
 

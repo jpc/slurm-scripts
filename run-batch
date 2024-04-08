@@ -1,7 +1,7 @@
 #!/bin/bash
 PROGRAM_PATH=$(dirname "$($(command -v greadlink || command -v readlink) -f -- "$0")")
 
-: ${TIME_LIMIT:=00:40:00} ${JOBS_PER_GPU:=1} ${JOB_NODES:=1}
+: ${TIME_LIMIT:=00:40:00} ${JOBS_PER_GPU:=1}
 NODES=$1; shift
 
 if [ "$NODES" == "devel" ]; then
@@ -21,6 +21,12 @@ else
 	cat > file-list.$$
 	: ${CLUSTER:=booster}
 fi
+
+# maximum amount of jobs in queue
+MAX_JOBS=$((4 * $JOBS_PER_GPU * 64))
+
+# if we exceed this maximum we need to force multi-node jobs
+: ${JOB_NODES:=$(( ($(wc -l < file-list.$$) + $MAX_JOBS - 1) / $MAX_JOBS))}
 
 JOBS_PER_NODE=$(($JOBS_PER_GPU * 4 * $JOB_NODES))
 N_JOBS=$(wc -l < file-list.$$)

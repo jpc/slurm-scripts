@@ -58,3 +58,8 @@ Missing features:
 - There should be some way to sort the jobs by kind and apply different SLURM job settings (tasks per GPU, timeouts)
 - Would be nice to have some kind of benchmarking support to figure out the optimal jobs_per_gpu and batch_sizes
 - The `stderr` and `stdout` from each of the tasks could be printed to the `make` console
+- The CherryPy webserver is multi-threaded and needs an OS thread to keep track of each task. Replacing this with an  
+  asyncio based web server (`aiohttp` or [`quart`](https://github.com/pallets/quart)) would lower the resource usage a lot.
+- Even with the optimized SHELL override trick `make` still spawns a new OS process for each task just to wait on a TCP
+  socket to track it's completion. Could be interesting to add our jobscheduler protocol support to GNU make and
+  avoid all these process spawns.

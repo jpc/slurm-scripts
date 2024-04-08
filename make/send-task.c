@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText: 2024 Jakub Piotr Cłapa <jpc@collabora.com>
 // SPDX-License-Identifier: MIT
 
-// send-job sends its command line to an HTTP endpoint and blocks until it gets a reply.
+// send-task sends its command line to an HTTP endpoint and blocks until it gets a reply.
 // It expects to be used as a SHELL in a Makefile to forward all the jobs to the job scheduler.
-// This is an optimized implementation of send-job.py.
+// This is an quick and dirty optimized implementation of send-task.py.
 
 // FIXME: currently does not support passing in the cwd and the environment variables.
 

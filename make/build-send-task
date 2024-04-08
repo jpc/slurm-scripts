@@ -1,0 +1,6 @@
+#!/bin/sh
+LDFLAGS=
+if [[ "$(uname)" == Linux ]]; then
+  LDFLAGS=-static
+fi
+cc $LDFLAGS -o send-task send-task.c cJSON.c

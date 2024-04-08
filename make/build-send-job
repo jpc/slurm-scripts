@@ -1,0 +1,2 @@
+#!/bin/sh
+cc -static -o send-job send-job.c cJSON.c

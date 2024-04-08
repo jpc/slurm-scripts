@@ -495,7 +495,7 @@ http_status_t http_process( http_t* http )
         #pragma warning( disable: 4548 ) // expression before comma has no effect; expected expression with side-effect
         FD_SET( internal->socket, &sockets_to_check );
         #pragma warning( pop )
-        struct timeval timeout; timeout.tv_sec = 0; timeout.tv_usec = 0;
+        struct timeval timeout; timeout.tv_sec = 0; timeout.tv_usec = 100000;
         // check if socket is ready for send
         if( select( (int)( internal->socket + 1 ), NULL, &sockets_to_check, NULL, &timeout ) == 1 ) 
             {
@@ -537,7 +537,7 @@ http_status_t http_process( http_t* http )
     #pragma warning( disable: 4548 ) // expression before comma has no effect; expected expression with side-effect
     FD_SET( internal->socket, &sockets_to_check );
     #pragma warning( pop )
-    struct timeval timeout; timeout.tv_sec = 0; timeout.tv_usec = 0;
+    struct timeval timeout; timeout.tv_sec = 0; timeout.tv_usec = 100000;
     while( select( (int)( internal->socket + 1 ), &sockets_to_check, NULL, NULL, &timeout ) == 1 )
         {
         char buffer[ 4096 ];

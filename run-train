@@ -7,7 +7,7 @@ NODES=$1; shift
 
 JOBID=$(sbatch --parsable /dev/stdin "$@" <<EOF
 #!/bin/bash
-#SBATCH --account=cstdl
+#SBATCH --account=${ACCOUNT:=cstdl}
 #SBATCH --nodes=$NODES
 #SBATCH --ntasks-per-node=4
 #SBATCH --output=out.%j

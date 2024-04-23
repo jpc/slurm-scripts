@@ -21,20 +21,23 @@ C%:
 To use it you need to run the job scheduler (using GNU parallel here instead of SLURM so the example is portable):
 
 ```bash
+./build-send-task
 python jobscheduler.py parallel
 ```
 
-And launch the make with a special shell:
+`jobscheduler` uses the first argument to choose the "cluster type" and all the rest of the arguments get passed to
+the specially configured `make`. On a SLURM cluster you can use this:
+
 ```bash
-./build-send-task
-make -j4 SHELL=$HOME/slurm-scripts/make/send-task
+HUGGINGFACE_LOCAL_ONLY=1 ~/slurm-scripts/make/bin/slurm-make all_vad
 ```
 
 The default job size is set to `4` so it will run all the `C` tasks concurrently, then all the `B`s and finally it will
 run the `A` (after a bit of delay – it waits a few seconds for more tasks to avoid launching a mostly empty job).
 
 All of this is behaving mostly like normal `make -j` but with a twist to allow us to queue all the commands to a job
-management system like SLURM and wait for them to finish.
+management system like SLURM and wait for them to finish. Since this is all built around regular `make` you can for example
+run `make -n all_vad|wc -l` to check how many tasks would need to run to complete the `all_vad` goal.
 
 ### Future work
 

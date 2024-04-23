@@ -1,0 +1,2 @@
+#!/bin/sh
+exec srun --pty --overlap --jobid=$1 nvitop -U

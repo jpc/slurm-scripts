@@ -99,9 +99,32 @@ watch "sinfo |grep '^booster\|develbooster'"
 ```
 
 ```bash
-watch "squeue -u $USER"
+watch "squeue -u $USER --start -tcg,pd,r,cf"
 ```
 
 ```bash
 while true; do wandb sync --sync-all wandb/; sleep 30; done
+```
+
+You can also `pip install nvitop` to get a good `nvtop` alternative without compiling anything:
+```bash
+nvitop -U # Unicode drawing does not work on the cluster for some reason
+```
+
+You can use `srun` to get a shell inside a running job:
+```bash
+srun --pty --overlap --jobid=9705459 /bin/bash
+```
+
+You can also use my helper script to quickly check the GPU utilization:
+```bash
+~/slurm-scripts/nvitop 9698154 # takes a job ID and runs nvitop there
+```
+
+## Python environment
+
+Enable Python and setup a venv in under ~/$USER/env. Afterwards this gives you a good environment:
+```bash
+ml Stages/2023  GCCcore/.11.3.0 Python/3.10.4 parallel/20220722
+. ~/$USER/env/bin/activate
 ```

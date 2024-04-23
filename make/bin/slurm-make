@@ -1,0 +1,4 @@
+#!/bin/sh
+PROGRAM_PATH=$(dirname "$($(command -v greadlink || command -v readlink) -f -- "$0")")
+
+exec python3 "$PROGRAM_PATH/../jobscheduler.py" slurm "$@"

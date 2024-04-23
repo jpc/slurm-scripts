@@ -4,12 +4,15 @@ import cherrypy
 
 import math
 import os
+from pathlib import Path
 import queue
 import subprocess
 import sys
 import tempfile
 import threading
 import time
+
+app_dir = Path(__file__).parent
 
 class TaskManager:
     queue_delay = 30
@@ -203,6 +206,17 @@ class JobScheduler(object):
         rc = manager.run_task(cherrypy.request.json)
         return { 'rc': rc }
 
+exitcode = None
+
+def run_make(args):
+    args = ['make', '-j1024', f'SHELL={app_dir}/send-task'] + args
+    def runner():
+        global exitcode
+        result = subprocess.run(args)
+        exitcode = result.returncode
+        cherrypy.engine.exit()
+    threading.Thread(target=runner, daemon=True).start()
+
 if __name__ == '__main__':
     mode = sys.argv[1] if len(sys.argv) > 0 else "parallel"
 
@@ -217,7 +231,7 @@ if __name__ == '__main__':
 
     cherrypy.config.update({
         # FIXME: randomly generate the port (set this to `0`) and pass it to the Makefile
-        'server.socket_port': 4444,
+        'server.socket_port': 0,
         # this effectively limits the parallelism of make -j
         'server.thread_pool': 1024,
         # this is 5 by default and would starve the 1024 threads
@@ -230,6 +244,8 @@ if __name__ == '__main__':
     cherrypy.engine.signals.subscribe()
     cherrypy.engine.start()
     # We can use this in the future to retrieve the random port
-    # _host, port = cherrypy.server.bound_addr
-    # print("Port:", port)
+    _host, port = cherrypy.server.bound_addr
+    os.environ['JOB_SCHEDULER_PORT'] = str(port)
+    run_make(sys.argv[2:])
     cherrypy.engine.block()
+    sys.exit(exitcode)

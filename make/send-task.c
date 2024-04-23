@@ -32,8 +32,12 @@ int main( int argc, char** argv ) {
 end:
     cJSON_Delete(args);
 
+    char url[1024];
+    char *port = getenv("JOB_SCHEDULER_PORT");
+    if (!port) port = "4444";
+    snprintf(url, sizeof(url), "http://127.0.0.1:%s/", port);
     // the endpoint address has to be an IP to avoid getaddrinfo in static builds
-    http_t* request = http_post( "http://127.0.0.1:4444/", payload, strlen(payload), NULL );
+    http_t* request = http_post(url, payload, strlen(payload), NULL );
     if( !request ) {
         printf( "Invalid request.\n" );
         return 1;

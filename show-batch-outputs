@@ -8,7 +8,13 @@ progress_or_err() {
   fi
 }
 
-for x in outputs/*.stdout; do
+if [ -n "$1" ]; then
+  pat="*$1*"
+else
+  pat="*"
+fi
+
+for x in outputs/$pat.stdout; do
   b=${x%%.stdout}
   echo $b $(progress_or_err $b)
 done
